@@ -421,6 +421,7 @@ const emptyDay = () => ({
     medium: trip(),
     quick: trip()
   },
+  joyPlan: trip(),
   pulses: [],
   nutrition: {},
   soul: {},
@@ -833,6 +834,77 @@ function Reward({
   }, unlocked ? "✓ Earned. Enjoy it fully — celebration is part of the practice." : "Reward effort honestly given, not perfection."));
 }
 
+/* ── planned joy ── */
+function JoyPlan({
+  day,
+  upd
+}) {
+  const items = day.joyPlan || [ptx(), ptx(), ptx()];
+  const setItem = (i, patch) => upd({
+    joyPlan: items.map((t, j) => j === i ? {
+      ...t,
+      ...patch
+    } : t)
+  });
+  const done = items.filter(t => t.done && t.text.trim()).length;
+  const named = items.filter(t => t.text.trim()).length;
+  return /*#__PURE__*/React.createElement(Card, {
+    style: {
+      background: "#FDF6F3",
+      borderColor: "#E6C9CC"
+    }
+  }, /*#__PURE__*/React.createElement(Label, {
+    right: `${done}/${named || "—"}`
+  }, "Planned joy for today 🤍"), items.map((t, i) => /*#__PURE__*/React.createElement("div", {
+    key: i,
+    style: {
+      display: "flex",
+      alignItems: "center",
+      gap: 10,
+      marginTop: 8
+    }
+  }, /*#__PURE__*/React.createElement("button", {
+    onClick: () => setItem(i, {
+      done: !t.done
+    }),
+    "aria-label": "joy done",
+    style: {
+      width: 20,
+      height: 20,
+      borderRadius: "50%",
+      flexShrink: 0,
+      cursor: "pointer",
+      padding: 0,
+      border: `1.5px solid ${t.done ? C.rose : C.line}`,
+      background: t.done ? C.rose : "transparent",
+      color: C.paper,
+      fontSize: 11,
+      lineHeight: "17px"
+    }
+  }, t.done ? "✓" : ""), /*#__PURE__*/React.createElement("input", {
+    value: t.text,
+    placeholder: ["a small beauty — matcha in the sun, one jazz track…", "a moment for the soul — a museum wall, a poem, a call…", "a gift to the body — a walk, a stretch, an early night…"][i],
+    onChange: e => setItem(i, {
+      text: e.target.value
+    }),
+    style: {
+      ...smallInput,
+      fontFamily: "'Cormorant Garamond',serif",
+      fontSize: 16,
+      textDecoration: t.done ? "line-through" : "none",
+      opacity: t.done ? 0.55 : 1
+    }
+  }))), /*#__PURE__*/React.createElement("p", {
+    style: {
+      fontFamily: "'Cormorant Garamond',serif",
+      fontStyle: "italic",
+      fontSize: 14.5,
+      color: C.inkSoft,
+      margin: "12px 0 0"
+    }
+  }, "Joy scheduled is joy protected. Keep these promises as faithfully as the big ones."));
+}
+
 /* ── pulses ── */
 function Pulses({
   day,
@@ -1175,7 +1247,7 @@ function dayToMd(key, d) {
   const s = dayScore(d);
   const pr = g => d.priorities[g].filter(t => t.text.trim()).map(t => `  - [${t.done ? "x" : " "}] ${t.text}`).join("\n");
   const list = a => a.filter(Boolean).map(x => `  - ${x}`).join("\n");
-  return [`## ${key} (${dayName(key)})`, d.intention && `**Intention:** ${d.intention}`, d.compliment && `**Morning compliment:** ${d.compliment}`, s && `**Resonance:** ${s.score} · focus ${s.focus.toFixed(1)} · clear mind ${s.clarity.toFixed(1)} · energy ${s.energy.toFixed(1)} · impulses ${s.ticks}`, `**Priorities**\n- Big:\n${pr("big")}\n- Medium:\n${pr("medium")}\n- Quick:\n${pr("quick")}`, d.pulses.length && `**Pulses**\n${d.pulses.map(p => `  - ${p.time} ${p.activity} · F${p.focus} C${p.clarity} E${p.energy} · ${p.ticks} impulses · ${p.effect}`).join("\n")}`, `**Nourishment:** ${NUTRITION.filter(n => d.nutrition[n]).join(", ") || "—"}`, `**Anchors:** ${SOUL.filter(a => d.soul[a.id]).map(a => a.label).join(", ") || "—"}`, `**Sleep:** ${d.sleepHours} h, quality ${d.sleepQuality}/5 · **Screen:** ${d.screenTime || "—"} min`, d.visionStep && `**Vision step:** ${d.visionStep}`, (d.thanksSelf.some(Boolean) || d.thanksOthers.some(Boolean) || d.proud.some(Boolean)) && `**Thankful to myself:**\n${list(d.thanksSelf)}\n**Thankful to others:**\n${list(d.thanksOthers)}\n**Proud of:**\n${list(d.proud)}`, d.joy && `**Joy:** ${d.joy}`, d.inspired && `**Inspired most:** ${d.inspired}`, d.win && `**Win:** ${d.win}`, d.lesson && `**Lesson:** ${d.lesson}`, d.tomorrow && `**Differently tomorrow:** ${d.tomorrow}`, d.kindness && `**To myself, kindly:** ${d.kindness}`].filter(Boolean).join("\n\n") + "\n";
+  return [`## ${key} (${dayName(key)})`, d.intention && `**Intention:** ${d.intention}`, d.compliment && `**Morning compliment:** ${d.compliment}`, s && `**Resonance:** ${s.score} · focus ${s.focus.toFixed(1)} · clear mind ${s.clarity.toFixed(1)} · energy ${s.energy.toFixed(1)} · impulses ${s.ticks}`, `**Priorities**\n- Big:\n${pr("big")}\n- Medium:\n${pr("medium")}\n- Quick:\n${pr("quick")}`, (d.joyPlan || []).some(t => t.text.trim()) && `**Planned joy**\n${d.joyPlan.filter(t => t.text.trim()).map(t => `  - [${t.done ? "x" : " "}] ${t.text}`).join("\n")}`, d.pulses.length && `**Pulses**\n${d.pulses.map(p => `  - ${p.time} ${p.activity} · F${p.focus} C${p.clarity} E${p.energy} · ${p.ticks} impulses · ${p.effect}`).join("\n")}`, `**Nourishment:** ${NUTRITION.filter(n => d.nutrition[n]).join(", ") || "—"}`, `**Anchors:** ${SOUL.filter(a => d.soul[a.id]).map(a => a.label).join(", ") || "—"}`, `**Sleep:** ${d.sleepHours} h, quality ${d.sleepQuality}/5 · **Screen:** ${d.screenTime || "—"} min`, d.visionStep && `**Vision step:** ${d.visionStep}`, (d.thanksSelf.some(Boolean) || d.thanksOthers.some(Boolean) || d.proud.some(Boolean)) && `**Thankful to myself:**\n${list(d.thanksSelf)}\n**Thankful to others:**\n${list(d.thanksOthers)}\n**Proud of:**\n${list(d.proud)}`, d.joy && `**Joy:** ${d.joy}`, d.inspired && `**Inspired most:** ${d.inspired}`, d.win && `**Win:** ${d.win}`, d.lesson && `**Lesson:** ${d.lesson}`, d.tomorrow && `**Differently tomorrow:** ${d.tomorrow}`, d.kindness && `**To myself, kindly:** ${d.kindness}`].filter(Boolean).join("\n\n") + "\n";
 }
 async function exportDays(n, tKey, today) {
   const keys = lastNDays(n);
@@ -1226,6 +1298,9 @@ function Today({
     onChange: v => upd({
       priorities: v
     })
+  }), /*#__PURE__*/React.createElement(JoyPlan, {
+    day: day,
+    upd: upd
   }), /*#__PURE__*/React.createElement(Pulses, {
     day: day,
     upd: upd
