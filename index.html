@@ -2100,6 +2100,256 @@ function Goals({
   }, pctOf(i) != null ? pctOf(i) + "%" : ""))))))));
 }
 
+/* ── ACTIVITIES (25 rows, monthly grid) ── */
+function Activities({
+  acts,
+  setActs,
+  mKey
+}) {
+  const dayKeys = useMemo(() => monthDayKeys(), []);
+  const today = todayKey();
+  const elapsed = dayKeys.filter(k => k <= today).length;
+  const list = acts.list || Array.from({
+    length: 25
+  }, () => "");
+  const ticks = acts.ticks || {};
+  const setItem = (i, text) => setActs({
+    ...acts,
+    list: list.map((g, j) => j === i ? text : g)
+  });
+  const toggle = (i, k) => {
+    const g = {
+      ...(ticks[i] || {})
+    };
+    g[k] = !g[k];
+    setActs({
+      ...acts,
+      ticks: {
+        ...ticks,
+        [i]: g
+      }
+    });
+  };
+  const daysOf = i => dayKeys.filter(k => k <= today && ticks[i]?.[k]).length;
+  const weekKeys = lastNDays(7);
+  const weekOf = i => weekKeys.filter(k => ticks[i]?.[k]).length;
+  const active = list.map((g, i) => ({
+    g,
+    i
+  })).filter(x => x.g.trim());
+  const totalTicks = active.reduce((s2, {
+    i
+  }) => s2 + daysOf(i), 0);
+  return /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "grid",
+      gap: 16
+    }
+  }, /*#__PURE__*/React.createElement(Card, {
+    style: {
+      background: C.night,
+      border: "none"
+    }
+  }, /*#__PURE__*/React.createElement(Label, null, /*#__PURE__*/React.createElement("span", {
+    style: {
+      color: C.brassSoft
+    }
+  }, "Activities dashboard — ", mKey)), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      gap: 26,
+      alignItems: "center",
+      flexWrap: "wrap"
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      textAlign: "center"
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontFamily: "'Cormorant Garamond',serif",
+      fontSize: 56,
+      color: C.ivory,
+      lineHeight: 1
+    }
+  }, totalTicks), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontFamily: "'Karla',sans-serif",
+      fontSize: 11,
+      letterSpacing: "0.1em",
+      textTransform: "uppercase",
+      color: "#9A94B0"
+    }
+  }, "sessions this month")), /*#__PURE__*/React.createElement("div", {
+    style: {
+      flex: "1 1 260px"
+    }
+  }, active.map(({
+    g,
+    i
+  }) => {
+    const d = daysOf(i);
+    const p = elapsed ? Math.round(d / elapsed * 100) : 0;
+    return /*#__PURE__*/React.createElement("div", {
+      key: i,
+      style: {
+        marginTop: 7
+      }
+    }, /*#__PURE__*/React.createElement("div", {
+      style: {
+        display: "flex",
+        justifyContent: "space-between",
+        fontFamily: "'Karla',sans-serif",
+        fontSize: 11.5,
+        color: "#B7B2C7"
+      }
+    }, /*#__PURE__*/React.createElement("span", {
+      style: {
+        maxWidth: "70%",
+        overflow: "hidden",
+        textOverflow: "ellipsis",
+        whiteSpace: "nowrap"
+      }
+    }, g), /*#__PURE__*/React.createElement("span", {
+      style: {
+        color: C.ivory,
+        fontWeight: 700
+      }
+    }, d, " day", d === 1 ? "" : "s", " ", /*#__PURE__*/React.createElement("span", {
+      style: {
+        color: "#9A94B0",
+        fontWeight: 400
+      }
+    }, "· wk ", weekOf(i)))), /*#__PURE__*/React.createElement("div", {
+      style: {
+        height: 4,
+        background: "#3A3852",
+        borderRadius: 2,
+        marginTop: 2
+      }
+    }, /*#__PURE__*/React.createElement("div", {
+      style: {
+        height: 4,
+        width: `${p}%`,
+        background: p >= 40 ? C.sage : p >= 15 ? C.brass : C.rose,
+        borderRadius: 2
+      }
+    })));
+  }), !active.length && /*#__PURE__*/React.createElement("p", {
+    style: {
+      fontFamily: "'Karla',sans-serif",
+      fontSize: 13,
+      color: "#9A94B0"
+    }
+  }, "Name your hobbies, courses and practices below — tick each day you gave them time."))), /*#__PURE__*/React.createElement("p", {
+    style: {
+      fontFamily: "'Cormorant Garamond',serif",
+      fontStyle: "italic",
+      fontSize: 14.5,
+      color: "#B7B2C7",
+      margin: "12px 0 0"
+    }
+  }, "Hobbies are not a reward for finished work — they are part of the work of a full life.")), /*#__PURE__*/React.createElement(Card, {
+    style: {
+      padding: 0,
+      overflow: "hidden"
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      padding: "18px 22px 0"
+    }
+  }, /*#__PURE__*/React.createElement(Label, null, "Activities — 25 spaces · tick a day when you gave it time")), /*#__PURE__*/React.createElement("div", {
+    style: {
+      overflowX: "auto",
+      padding: "0 12px 16px"
+    }
+  }, /*#__PURE__*/React.createElement("table", {
+    style: {
+      borderCollapse: "collapse"
+    }
+  }, /*#__PURE__*/React.createElement("thead", null, /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("th", {
+    style: {
+      position: "sticky",
+      left: 0,
+      background: C.paper,
+      minWidth: 180,
+      textAlign: "left",
+      fontFamily: "'Karla',sans-serif",
+      fontSize: 10.5,
+      color: C.inkSoft,
+      padding: "6px 8px"
+    }
+  }, "Activity"), dayKeys.map(k => /*#__PURE__*/React.createElement("th", {
+    key: k,
+    style: {
+      fontFamily: "'Karla',sans-serif",
+      fontSize: 9.5,
+      color: k === today ? C.brass : C.inkSoft,
+      padding: "4px 2px",
+      fontWeight: k === today ? 700 : 400
+    }
+  }, k.slice(-2))), /*#__PURE__*/React.createElement("th", {
+    style: {
+      fontFamily: "'Karla',sans-serif",
+      fontSize: 10,
+      color: C.inkSoft,
+      padding: "4px 6px"
+    }
+  }, "days"))), /*#__PURE__*/React.createElement("tbody", null, list.map((g, i) => /*#__PURE__*/React.createElement("tr", {
+    key: i
+  }, /*#__PURE__*/React.createElement("td", {
+    style: {
+      position: "sticky",
+      left: 0,
+      background: C.paper,
+      padding: "3px 8px",
+      borderBottom: `1px solid ${C.line}`
+    }
+  }, /*#__PURE__*/React.createElement("input", {
+    value: g,
+    placeholder: `activity ${i + 1}…`,
+    onChange: e => setItem(i, e.target.value),
+    style: {
+      ...smallInput,
+      fontSize: 12.5,
+      minWidth: 160
+    }
+  })), dayKeys.map(k => {
+    const on = !!ticks[i]?.[k];
+    const future = k > today;
+    return /*#__PURE__*/React.createElement("td", {
+      key: k,
+      style: {
+        padding: 1,
+        borderBottom: `1px solid ${C.line}`
+      }
+    }, /*#__PURE__*/React.createElement("button", {
+      disabled: future || !g.trim(),
+      onClick: () => toggle(i, k),
+      "aria-label": `${g} ${k}`,
+      style: {
+        width: 17,
+        height: 17,
+        borderRadius: 4,
+        cursor: future || !g.trim() ? "default" : "pointer",
+        padding: 0,
+        border: `1px solid ${on ? C.brass : C.line}`,
+        background: on ? C.brass : future ? "#F4F0E5" : "transparent",
+        opacity: future ? 0.4 : 1
+      }
+    }));
+  }), /*#__PURE__*/React.createElement("td", {
+    style: {
+      fontFamily: "'Karla',sans-serif",
+      fontSize: 11.5,
+      fontWeight: 700,
+      padding: "0 6px",
+      color: daysOf(i) >= 8 ? C.sage : C.ink,
+      borderBottom: `1px solid ${C.line}`
+    }
+  }, g.trim() ? daysOf(i) : ""))))))));
+}
+
 /* ── YEAR GOALS ── */
 function Year({
   year,
@@ -2705,6 +2955,7 @@ function App() {
   const [weekMeta, setWeekMeta] = useState(emptyPeriod());
   const [monthMeta, setMonthMeta] = useState(emptyPeriod());
   const [goals, setGoals] = useState({});
+  const [acts, setActs] = useState({});
   const [year, setYear] = useState({});
   const [vision, setVision] = useState({});
   const [settings, setSettings] = useState({
@@ -2719,7 +2970,7 @@ function App() {
   const quote = QUOTES[Math.floor((Date.now() - new Date(new Date().getFullYear(), 0, 0)) / 864e5) % QUOTES.length];
   useEffect(() => {
     (async () => {
-      const [w, m, g, y, v, s] = await Promise.all([sGet(`rhythm3-week:${wKey}`), sGet(`rhythm3-month:${mKey}`), sGet(`rhythm3-goals:${mKey}`), sGet("rhythm3-year"), sGet("rhythm3-vision"), sGet("rhythm3-settings")]);
+      const [w, m, g, a, y, v, s] = await Promise.all([sGet(`rhythm3-week:${wKey}`), sGet(`rhythm3-month:${mKey}`), sGet(`rhythm3-goals:${mKey}`), sGet(`rhythm3-acts:${mKey}`), sGet("rhythm3-year"), sGet("rhythm3-vision"), sGet("rhythm3-settings")]);
       if (w) setWeekMeta({
         ...emptyPeriod(),
         ...w
@@ -2729,6 +2980,7 @@ function App() {
         ...m
       });
       if (g) setGoals(g);
+      if (a) setActs(a);
       if (y) setYear(y);
       if (v) setVision(v);
       if (s) setSettings(s);
@@ -2752,11 +3004,11 @@ function App() {
     if (!loaded || dayLoadedFor !== dKey) return;
     setSaved(false);
     const t = setTimeout(async () => {
-      await Promise.all([sSet(`rhythm3:${dKey}`, day), sSet(`rhythm3-week:${wKey}`, weekMeta), sSet(`rhythm3-month:${mKey}`, monthMeta), sSet(`rhythm3-goals:${mKey}`, goals), sSet("rhythm3-year", year), sSet("rhythm3-vision", vision), sSet("rhythm3-settings", settings)]);
+      await Promise.all([sSet(`rhythm3:${dKey}`, day), sSet(`rhythm3-week:${wKey}`, weekMeta), sSet(`rhythm3-month:${mKey}`, monthMeta), sSet(`rhythm3-goals:${mKey}`, goals), sSet(`rhythm3-acts:${mKey}`, acts), sSet("rhythm3-year", year), sSet("rhythm3-vision", vision), sSet("rhythm3-settings", settings)]);
       setSaved(true);
     }, 700);
     return () => clearTimeout(t);
-  }, [day, weekMeta, monthMeta, goals, year, vision, settings, loaded, dKey, dayLoadedFor, wKey, mKey]);
+  }, [day, weekMeta, monthMeta, goals, acts, year, vision, settings, loaded, dKey, dayLoadedFor, wKey, mKey]);
   useEffect(() => {
     if (tab !== "week" && tab !== "month") return;
     (async () => {
@@ -2785,6 +3037,9 @@ function App() {
   }, {
     id: "goals",
     name: "Goals"
+  }, {
+    id: "acts",
+    name: "Activities"
   }, {
     id: "year",
     name: "Year"
@@ -2922,7 +3177,7 @@ function App() {
       color: C.ink,
       marginBottom: 14
     }
-  }, tab === "today" ? dKey === tKey ? niceDate(dKey) : niceDate(dKey) + " — a past day" : tab === "week" ? "The last seven days" : tab === "month" ? "The month in view" : tab === "goals" ? "Twelve goals, one faithful month" : tab === "year" ? "The year's twelve intentions" : tab === "vision" ? "The life you are building" : tab === "affirm" ? "A word of support" : "Gentle reminders"), tab === "today" && /*#__PURE__*/React.createElement("div", {
+  }, tab === "today" ? dKey === tKey ? niceDate(dKey) : niceDate(dKey) + " — a past day" : tab === "week" ? "The last seven days" : tab === "month" ? "The month in view" : tab === "goals" ? "Twelve goals, one faithful month" : tab === "acts" ? "Time for what feeds you" : tab === "year" ? "The year's twelve intentions" : tab === "vision" ? "The life you are building" : tab === "affirm" ? "A word of support" : "Gentle reminders"), tab === "today" && /*#__PURE__*/React.createElement("div", {
     style: {
       display: "grid",
       gap: 16
@@ -2949,6 +3204,10 @@ function App() {
   }), tab === "goals" && /*#__PURE__*/React.createElement(Goals, {
     goals: goals,
     setGoals: setGoals,
+    mKey: mKey
+  }), tab === "acts" && /*#__PURE__*/React.createElement(Activities, {
+    acts: acts,
+    setActs: setActs,
     mKey: mKey
   }), tab === "year" && /*#__PURE__*/React.createElement(Year, {
     year: year,
