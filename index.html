@@ -388,6 +388,44 @@ const lastNDays = n => {
   }
   return o;
 };
+const isoWeekDays = offset => {
+  const d = new Date();
+  d.setDate(d.getDate() + offset * 7);
+  const wd = (d.getDay() + 6) % 7;
+  const mon = new Date(d);
+  mon.setDate(d.getDate() - wd);
+  return Array.from({
+    length: 7
+  }, (_, i) => {
+    const x = new Date(mon);
+    x.setDate(mon.getDate() + i);
+    return iso(x);
+  });
+};
+const weekKeyOf = offset => {
+  const d = new Date();
+  d.setDate(d.getDate() + offset * 7);
+  return weekKey(d);
+};
+const monthKeysOf = offset => {
+  const b = new Date();
+  const first = new Date(b.getFullYear(), b.getMonth() + offset, 1);
+  const n = new Date(first.getFullYear(), first.getMonth() + 1, 0).getDate();
+  return Array.from({
+    length: n
+  }, (_, i) => iso(new Date(first.getFullYear(), first.getMonth(), i + 1)));
+};
+const monthKeyOf = offset => {
+  const b = new Date();
+  return monthKey(new Date(b.getFullYear(), b.getMonth() + offset, 15));
+};
+const monthLabel = offset => {
+  const b = new Date();
+  return new Date(b.getFullYear(), b.getMonth() + offset, 1).toLocaleDateString("en-US", {
+    month: "long",
+    year: "numeric"
+  });
+};
 const monthDayKeys = () => {
   const d = new Date();
   const y = d.getFullYear(),
@@ -2960,20 +2998,19 @@ function DateNav({
   const shift = n => {
     const d = new Date(dKey + "T12:00:00");
     d.setDate(d.getDate() + n);
-    const k = iso(d);
-    if (k <= tKey) setDKey(k);
+    setDKey(iso(d));
   };
-  const navBtn = disabled => ({
+  const navBtn = {
     width: 34,
     height: 34,
     borderRadius: "50%",
     border: `1px solid ${C.line}`,
     background: C.paper,
-    cursor: disabled ? "default" : "pointer",
+    cursor: "pointer",
     fontSize: 16,
-    color: disabled ? C.line : C.ink,
+    color: C.ink,
     lineHeight: 1
-  });
+  };
   return /*#__PURE__*/React.createElement(Card, {
     style: {
       display: "flex",
@@ -2983,15 +3020,14 @@ function DateNav({
       padding: "14px 18px"
     }
   }, /*#__PURE__*/React.createElement("button", {
-    style: navBtn(false),
+    style: navBtn,
     onClick: () => shift(-1),
     "aria-label": "previous day"
   }, "‹"), /*#__PURE__*/React.createElement("input", {
     type: "date",
     value: dKey,
-    max: tKey,
     onChange: e => {
-      if (e.target.value && e.target.value <= tKey) setDKey(e.target.value);
+      if (e.target.value) setDKey(e.target.value);
     },
     style: {
       ...smallInput,
@@ -3000,9 +3036,8 @@ function DateNav({
       borderBottom: `1px solid ${C.brassSoft}`
     }
   }), /*#__PURE__*/React.createElement("button", {
-    style: navBtn(dKey === tKey),
+    style: navBtn,
     onClick: () => shift(1),
-    disabled: dKey === tKey,
     "aria-label": "next day"
   }, "›"), dKey !== tKey && /*#__PURE__*/React.createElement("button", {
     style: btn(true),
@@ -3015,7 +3050,63 @@ function DateNav({
       color: C.inkSoft,
       marginLeft: "auto"
     }
-  }, dKey === tKey ? "you are in today" : "editing a past day — everything saves to that date"));
+  }, dKey === tKey ? "you are in today" : dKey < tKey ? "editing a past day — everything saves to that date" : "planning a future day — set the priorities and joys now"));
+}
+
+/* ── week / month navigation ── */
+function PeriodNav({
+  label,
+  isNow,
+  onPrev,
+  onNext,
+  onNow,
+  nowLabel
+}) {
+  const navBtn = {
+    width: 34,
+    height: 34,
+    borderRadius: "50%",
+    border: `1px solid ${C.line}`,
+    background: C.paper,
+    cursor: "pointer",
+    fontSize: 16,
+    color: C.ink,
+    lineHeight: 1
+  };
+  return /*#__PURE__*/React.createElement(Card, {
+    style: {
+      display: "flex",
+      alignItems: "center",
+      gap: 12,
+      flexWrap: "wrap",
+      padding: "14px 18px"
+    }
+  }, /*#__PURE__*/React.createElement("button", {
+    style: navBtn,
+    onClick: onPrev,
+    "aria-label": "previous period"
+  }, "‹"), /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontFamily: "'Cormorant Garamond',serif",
+      fontSize: 19,
+      color: C.ink
+    }
+  }, label), /*#__PURE__*/React.createElement("button", {
+    style: navBtn,
+    onClick: onNext,
+    "aria-label": "next period"
+  }, "›"), !isNow && /*#__PURE__*/React.createElement("button", {
+    style: btn(true),
+    onClick: onNow
+  }, nowLabel), /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontFamily: "'Cormorant Garamond',serif",
+      fontStyle: "italic",
+      fontSize: 14.5,
+      color: C.inkSoft,
+      marginLeft: "auto"
+    }
+  }, isNow ? "you are in the current one" : "intentions and priorities save to this period"));
 }
 
 /* ── APP ── */
@@ -3024,8 +3115,13 @@ function App() {
   const tKey = useMemo(() => todayKey(), []);
   const [dKey, setDKey] = useState(todayKey());
   const [dayLoadedFor, setDayLoadedFor] = useState(null);
-  const wKey = useMemo(() => weekKey(), []);
   const mKey = useMemo(() => monthKey(), []);
+  const [weekOffset, setWeekOffset] = useState(0);
+  const [monthOffset, setMonthOffset] = useState(0);
+  const viewWKey = weekKeyOf(weekOffset);
+  const viewMKey = monthKeyOf(monthOffset);
+  const [wLoadedFor, setWLoadedFor] = useState(null);
+  const [mLoadedFor, setMLoadedFor] = useState(null);
   const [day, setDay] = useState(emptyDay());
   const [weekMeta, setWeekMeta] = useState(emptyPeriod());
   const [monthMeta, setMonthMeta] = useState(emptyPeriod());
@@ -3045,15 +3141,7 @@ function App() {
   const quote = QUOTES[Math.floor((Date.now() - new Date(new Date().getFullYear(), 0, 0)) / 864e5) % QUOTES.length];
   useEffect(() => {
     (async () => {
-      const [w, m, g, a, y, v, s] = await Promise.all([sGet(`rhythm3-week:${wKey}`), sGet(`rhythm3-month:${mKey}`), sGet(`rhythm3-goals:${mKey}`), sGet(`rhythm3-acts:${mKey}`), sGet("rhythm3-year"), sGet("rhythm3-vision"), sGet("rhythm3-settings")]);
-      if (w) setWeekMeta({
-        ...emptyPeriod(),
-        ...w
-      });
-      if (m) setMonthMeta({
-        ...emptyPeriod(),
-        ...m
-      });
+      const [g, a, y, v, s] = await Promise.all([sGet(`rhythm3-goals:${mKey}`), sGet(`rhythm3-acts:${mKey}`), sGet("rhythm3-year"), sGet("rhythm3-vision"), sGet("rhythm3-settings")]);
       if (g) setGoals(g);
       if (a) setActs(a);
       if (y) setYear(y);
@@ -3061,7 +3149,31 @@ function App() {
       if (s) setSettings(s);
       setLoaded(true);
     })();
-  }, [tKey, wKey, mKey]);
+  }, [tKey, mKey]);
+
+  /* load week & month meta for whichever period is in view */
+  useEffect(() => {
+    (async () => {
+      setWLoadedFor(null);
+      const w = await sGet(`rhythm3-week:${viewWKey}`);
+      setWeekMeta(w ? {
+        ...emptyPeriod(),
+        ...w
+      } : emptyPeriod());
+      setWLoadedFor(viewWKey);
+    })();
+  }, [viewWKey]);
+  useEffect(() => {
+    (async () => {
+      setMLoadedFor(null);
+      const m = await sGet(`rhythm3-month:${viewMKey}`);
+      setMonthMeta(m ? {
+        ...emptyPeriod(),
+        ...m
+      } : emptyPeriod());
+      setMLoadedFor(viewMKey);
+    })();
+  }, [viewMKey]);
 
   /* load the selected day whenever the date changes */
   useEffect(() => {
@@ -3079,15 +3191,25 @@ function App() {
     if (!loaded || dayLoadedFor !== dKey) return;
     setSaved(false);
     const t = setTimeout(async () => {
-      await Promise.all([sSet(`rhythm3:${dKey}`, day), sSet(`rhythm3-week:${wKey}`, weekMeta), sSet(`rhythm3-month:${mKey}`, monthMeta), sSet(`rhythm3-goals:${mKey}`, goals), sSet(`rhythm3-acts:${mKey}`, acts), sSet("rhythm3-year", year), sSet("rhythm3-vision", vision), sSet("rhythm3-settings", settings)]);
+      await Promise.all([sSet(`rhythm3:${dKey}`, day), sSet(`rhythm3-goals:${mKey}`, goals), sSet(`rhythm3-acts:${mKey}`, acts), sSet("rhythm3-year", year), sSet("rhythm3-vision", vision), sSet("rhythm3-settings", settings)]);
       setSaved(true);
     }, 700);
     return () => clearTimeout(t);
-  }, [day, weekMeta, monthMeta, goals, acts, year, vision, settings, loaded, dKey, dayLoadedFor, wKey, mKey]);
+  }, [day, goals, acts, year, vision, settings, loaded, dKey, dayLoadedFor, mKey]);
+  useEffect(() => {
+    if (!loaded || wLoadedFor !== viewWKey) return;
+    const t = setTimeout(() => sSet(`rhythm3-week:${viewWKey}`, weekMeta), 700);
+    return () => clearTimeout(t);
+  }, [weekMeta, loaded, wLoadedFor, viewWKey]);
+  useEffect(() => {
+    if (!loaded || mLoadedFor !== viewMKey) return;
+    const t = setTimeout(() => sSet(`rhythm3-month:${viewMKey}`, monthMeta), 700);
+    return () => clearTimeout(t);
+  }, [monthMeta, loaded, mLoadedFor, viewMKey]);
   useEffect(() => {
     if (tab !== "week" && tab !== "month") return;
     (async () => {
-      const keys = lastNDays(tab === "week" ? 7 : 30);
+      const keys = tab === "week" ? isoWeekDays(weekOffset) : monthKeysOf(monthOffset);
       const rows = [];
       for (const k of keys) rows.push({
         key: k,
@@ -3095,7 +3217,7 @@ function App() {
       });
       tab === "week" ? setWeekDays(rows) : setMonthDays(rows);
     })();
-  }, [tab, day, dKey]);
+  }, [tab, day, dKey, weekOffset, monthOffset]);
   const upd = patch => setDay(d => ({
     ...d,
     ...patch
@@ -3252,7 +3374,7 @@ function App() {
       color: C.ink,
       marginBottom: 14
     }
-  }, tab === "today" ? dKey === tKey ? niceDate(dKey) : niceDate(dKey) + " — a past day" : tab === "week" ? "The last seven days" : tab === "month" ? "The month in view" : tab === "goals" ? "Twelve goals, one faithful month" : tab === "acts" ? "Time for what feeds you" : tab === "year" ? "The year's twelve intentions" : tab === "vision" ? "The life you are building" : tab === "affirm" ? "A word of support" : "Gentle reminders"), tab === "today" && /*#__PURE__*/React.createElement("div", {
+  }, tab === "today" ? dKey === tKey ? niceDate(dKey) : dKey < tKey ? niceDate(dKey) + " — a past day" : niceDate(dKey) + " — a future day" : tab === "week" ? "The week in view" : tab === "month" ? "The month in view" : tab === "goals" ? "Twelve goals, one faithful month" : tab === "acts" ? "Time for what feeds you" : tab === "year" ? "The year's twelve intentions" : tab === "vision" ? "The life you are building" : tab === "affirm" ? "A word of support" : "Gentle reminders"), tab === "today" && /*#__PURE__*/React.createElement("div", {
     style: {
       display: "grid",
       gap: 16
@@ -3266,17 +3388,41 @@ function App() {
     upd: upd,
     saved: saved,
     tKey: dKey
-  })), tab === "week" && /*#__PURE__*/React.createElement(Week, {
+  })), tab === "week" && /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "grid",
+      gap: 16
+    }
+  }, /*#__PURE__*/React.createElement(PeriodNav, {
+    label: `${niceDate(isoWeekDays(weekOffset)[0])} – ${niceDate(isoWeekDays(weekOffset)[6])}`,
+    isNow: weekOffset === 0,
+    onPrev: () => setWeekOffset(weekOffset - 1),
+    onNext: () => setWeekOffset(weekOffset + 1),
+    onNow: () => setWeekOffset(0),
+    nowLabel: "Current week"
+  }), /*#__PURE__*/React.createElement(Week, {
     days: weekDays,
     meta: weekMeta,
     setMeta: setWeekMeta,
-    wKey: wKey
-  }), tab === "month" && /*#__PURE__*/React.createElement(Month, {
+    wKey: viewWKey
+  })), tab === "month" && /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "grid",
+      gap: 16
+    }
+  }, /*#__PURE__*/React.createElement(PeriodNav, {
+    label: monthLabel(monthOffset),
+    isNow: monthOffset === 0,
+    onPrev: () => setMonthOffset(monthOffset - 1),
+    onNext: () => setMonthOffset(monthOffset + 1),
+    onNow: () => setMonthOffset(0),
+    nowLabel: "Current month"
+  }), /*#__PURE__*/React.createElement(Month, {
     meta: monthMeta,
     setMeta: setMonthMeta,
     days: monthDays,
-    mKey: mKey
-  }), tab === "goals" && /*#__PURE__*/React.createElement(Goals, {
+    mKey: viewMKey
+  })), tab === "goals" && /*#__PURE__*/React.createElement(Goals, {
     goals: goals,
     setGoals: setGoals,
     mKey: mKey
