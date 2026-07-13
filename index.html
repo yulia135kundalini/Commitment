@@ -2463,6 +2463,251 @@ function Activities({
   }, g.trim() ? daysOf(i) : ""))))))));
 }
 
+/* ── COMMITMENT OF 40 ── */
+function Forty({
+  forty,
+  setForty
+}) {
+  const today = todayKey();
+  const list = forty.list || [];
+  const addNew = () => setForty({
+    ...forty,
+    list: [...list, {
+      name: "",
+      start: today,
+      marks: {}
+    }]
+  });
+  const setItem = (i, patch) => setForty({
+    ...forty,
+    list: list.map((c, j) => j === i ? {
+      ...c,
+      ...patch
+    } : c)
+  });
+  const removeItem = i => setForty({
+    ...forty,
+    list: list.filter((_, j) => j !== i)
+  });
+  const dateOf = (c, i) => {
+    const d = new Date(c.start + "T12:00:00");
+    d.setDate(d.getDate() + i);
+    return iso(d);
+  };
+  const toggle = (ci, k) => {
+    const c = list[ci];
+    if (k > today) return;
+    const marks = {
+      ...c.marks
+    };
+    if (marks[k]) delete marks[k];else marks[k] = k === today ? "onday" : "late";
+    setItem(ci, {
+      marks
+    });
+  };
+  return /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "grid",
+      gap: 16
+    }
+  }, /*#__PURE__*/React.createElement(Card, {
+    style: {
+      background: "#FBF7EC",
+      borderColor: C.brassSoft
+    }
+  }, /*#__PURE__*/React.createElement("p", {
+    style: {
+      fontFamily: "'Cormorant Garamond',serif",
+      fontSize: 19,
+      fontStyle: "italic",
+      color: C.ink,
+      margin: 0,
+      lineHeight: 1.5
+    }
+  }, "Forty days is the ancient measure of transformation — long enough to change you, short enough to hold. Tap the day when the practice is done. Missed days can be filled in later, and the mark will honestly remember it was later."), /*#__PURE__*/React.createElement("div", {
+    style: {
+      marginTop: 12,
+      display: "flex",
+      gap: 18,
+      flexWrap: "wrap",
+      fontFamily: "'Karla',sans-serif",
+      fontSize: 12.5,
+      color: C.inkSoft
+    }
+  }, /*#__PURE__*/React.createElement("span", null, /*#__PURE__*/React.createElement("span", {
+    style: {
+      display: "inline-block",
+      width: 12,
+      height: 12,
+      borderRadius: "50%",
+      background: C.brass,
+      verticalAlign: "-1px"
+    }
+  }), " done that day"), /*#__PURE__*/React.createElement("span", null, /*#__PURE__*/React.createElement("span", {
+    style: {
+      display: "inline-block",
+      width: 12,
+      height: 12,
+      borderRadius: "50%",
+      background: C.paper,
+      border: `2px solid ${C.sage}`,
+      verticalAlign: "-1px"
+    }
+  }), " filled in later"), /*#__PURE__*/React.createElement("span", null, /*#__PURE__*/React.createElement("span", {
+    style: {
+      display: "inline-block",
+      width: 12,
+      height: 12,
+      borderRadius: "50%",
+      background: "transparent",
+      border: `1px solid ${C.line}`,
+      verticalAlign: "-1px"
+    }
+  }), " open"))), list.map((c, ci) => {
+    const done = Object.keys(c.marks || {}).length;
+    const onday = Object.values(c.marks || {}).filter(v => v === "onday").length;
+    const dayNum = Math.min(40, Math.max(0, Math.floor((new Date(today + "T12:00:00") - new Date(c.start + "T12:00:00")) / 864e5) + 1));
+    const complete = done >= 40;
+    return /*#__PURE__*/React.createElement(Card, {
+      key: ci,
+      style: complete ? {
+        borderColor: C.brass,
+        background: "#FBF7EC"
+      } : {}
+    }, /*#__PURE__*/React.createElement("div", {
+      style: {
+        display: "flex",
+        gap: 12,
+        flexWrap: "wrap",
+        alignItems: "flex-end"
+      }
+    }, /*#__PURE__*/React.createElement("div", {
+      style: {
+        flex: "2 1 200px"
+      }
+    }, /*#__PURE__*/React.createElement(Label, null, "Commitment"), /*#__PURE__*/React.createElement("input", {
+      value: c.name,
+      placeholder: "yoga every day / no sugar / morning pages…",
+      onChange: e => setItem(ci, {
+        name: e.target.value
+      }),
+      style: inputStyle
+    })), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement(Label, null, "Day 1"), /*#__PURE__*/React.createElement("input", {
+      type: "date",
+      value: c.start,
+      onChange: e => e.target.value && setItem(ci, {
+        start: e.target.value,
+        marks: {}
+      }),
+      style: {
+        ...smallInput,
+        width: 140
+      }
+    })), /*#__PURE__*/React.createElement("button", {
+      onClick: () => removeItem(ci),
+      "aria-label": "remove commitment",
+      style: {
+        border: "none",
+        background: "transparent",
+        color: C.inkSoft,
+        cursor: "pointer",
+        fontSize: 17,
+        padding: "6px"
+      }
+    }, "×")), /*#__PURE__*/React.createElement("div", {
+      style: {
+        display: "grid",
+        gridTemplateColumns: "repeat(10, 1fr)",
+        gap: 7,
+        marginTop: 16,
+        maxWidth: 420
+      }
+    }, Array.from({
+      length: 40
+    }, (_, i) => {
+      const k = dateOf(c, i);
+      const mark = (c.marks || {})[k];
+      const future = k > today;
+      return /*#__PURE__*/React.createElement("button", {
+        key: i,
+        disabled: future,
+        onClick: () => toggle(ci, k),
+        "aria-label": `forty ${ci} day ${i + 1}`,
+        title: `day ${i + 1} · ${k}`,
+        style: {
+          aspectRatio: "1",
+          borderRadius: "50%",
+          cursor: future ? "default" : "pointer",
+          padding: 0,
+          fontFamily: "'Karla',sans-serif",
+          fontSize: 10.5,
+          border: mark === "late" ? `2px solid ${C.sage}` : `1px solid ${mark ? C.brass : C.line}`,
+          background: mark === "onday" ? C.brass : mark === "late" ? C.paper : "transparent",
+          color: mark === "onday" ? C.paper : mark === "late" ? C.sage : future ? C.line : C.inkSoft,
+          opacity: future ? 0.45 : 1,
+          transition: "all .12s"
+        }
+      }, i + 1);
+    })), /*#__PURE__*/React.createElement("div", {
+      style: {
+        display: "flex",
+        gap: 22,
+        alignItems: "baseline",
+        marginTop: 14,
+        flexWrap: "wrap"
+      }
+    }, /*#__PURE__*/React.createElement("span", {
+      style: {
+        fontFamily: "'Cormorant Garamond',serif",
+        fontSize: 30,
+        color: complete ? C.brass : C.ink
+      }
+    }, done, /*#__PURE__*/React.createElement("span", {
+      style: {
+        fontSize: 17,
+        color: C.inkSoft
+      }
+    }, "/40")), /*#__PURE__*/React.createElement("span", {
+      style: {
+        fontFamily: "'Karla',sans-serif",
+        fontSize: 12.5,
+        color: C.inkSoft
+      }
+    }, onday, " on the day · ", done - onday, " filled later · calendar day ", dayNum, "/40")), /*#__PURE__*/React.createElement("div", {
+      style: {
+        height: 5,
+        background: C.line,
+        borderRadius: 3,
+        marginTop: 8
+      }
+    }, /*#__PURE__*/React.createElement("div", {
+      style: {
+        height: 5,
+        width: `${done / 40 * 100}%`,
+        background: complete ? C.brass : C.sage,
+        borderRadius: 3,
+        transition: "width .3s"
+      }
+    })), complete && /*#__PURE__*/React.createElement("p", {
+      style: {
+        fontFamily: "'Cormorant Garamond',serif",
+        fontStyle: "italic",
+        fontSize: 17,
+        color: C.brass,
+        margin: "12px 0 0"
+      }
+    }, "✦ Forty days complete. Something in you is not the same — honour it."));
+  }), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      justifyContent: "center"
+    }
+  }, /*#__PURE__*/React.createElement("button", {
+    style: btn(true),
+    onClick: addNew
+  }, "Begin a new 40-day commitment")));
+}
+
 /* ── YEAR GOALS ── */
 function Year({
   year,
@@ -3127,6 +3372,7 @@ function App() {
   const [monthMeta, setMonthMeta] = useState(emptyPeriod());
   const [goals, setGoals] = useState({});
   const [acts, setActs] = useState({});
+  const [forty, setForty] = useState({});
   const [year, setYear] = useState({});
   const [vision, setVision] = useState({});
   const [settings, setSettings] = useState({
@@ -3141,9 +3387,10 @@ function App() {
   const quote = QUOTES[Math.floor((Date.now() - new Date(new Date().getFullYear(), 0, 0)) / 864e5) % QUOTES.length];
   useEffect(() => {
     (async () => {
-      const [g, a, y, v, s] = await Promise.all([sGet(`rhythm3-goals:${mKey}`), sGet(`rhythm3-acts:${mKey}`), sGet("rhythm3-year"), sGet("rhythm3-vision"), sGet("rhythm3-settings")]);
+      const [g, a, f, y, v, s] = await Promise.all([sGet(`rhythm3-goals:${mKey}`), sGet(`rhythm3-acts:${mKey}`), sGet("rhythm3-forty"), sGet("rhythm3-year"), sGet("rhythm3-vision"), sGet("rhythm3-settings")]);
       if (g) setGoals(g);
       if (a) setActs(a);
+      if (f) setForty(f);
       if (y) setYear(y);
       if (v) setVision(v);
       if (s) setSettings(s);
@@ -3191,11 +3438,11 @@ function App() {
     if (!loaded || dayLoadedFor !== dKey) return;
     setSaved(false);
     const t = setTimeout(async () => {
-      await Promise.all([sSet(`rhythm3:${dKey}`, day), sSet(`rhythm3-goals:${mKey}`, goals), sSet(`rhythm3-acts:${mKey}`, acts), sSet("rhythm3-year", year), sSet("rhythm3-vision", vision), sSet("rhythm3-settings", settings)]);
+      await Promise.all([sSet(`rhythm3:${dKey}`, day), sSet(`rhythm3-goals:${mKey}`, goals), sSet(`rhythm3-acts:${mKey}`, acts), sSet("rhythm3-forty", forty), sSet("rhythm3-year", year), sSet("rhythm3-vision", vision), sSet("rhythm3-settings", settings)]);
       setSaved(true);
     }, 700);
     return () => clearTimeout(t);
-  }, [day, goals, acts, year, vision, settings, loaded, dKey, dayLoadedFor, mKey]);
+  }, [day, goals, acts, forty, year, vision, settings, loaded, dKey, dayLoadedFor, mKey]);
   useEffect(() => {
     if (!loaded || wLoadedFor !== viewWKey) return;
     const t = setTimeout(() => sSet(`rhythm3-week:${viewWKey}`, weekMeta), 700);
@@ -3237,6 +3484,9 @@ function App() {
   }, {
     id: "acts",
     name: "Activities"
+  }, {
+    id: "forty",
+    name: "40"
   }, {
     id: "year",
     name: "Year"
@@ -3374,7 +3624,7 @@ function App() {
       color: C.ink,
       marginBottom: 14
     }
-  }, tab === "today" ? dKey === tKey ? niceDate(dKey) : dKey < tKey ? niceDate(dKey) + " — a past day" : niceDate(dKey) + " — a future day" : tab === "week" ? "The week in view" : tab === "month" ? "The month in view" : tab === "goals" ? "Twelve goals, one faithful month" : tab === "acts" ? "Time for what feeds you" : tab === "year" ? "The year's twelve intentions" : tab === "vision" ? "The life you are building" : tab === "affirm" ? "A word of support" : "Gentle reminders"), tab === "today" && /*#__PURE__*/React.createElement("div", {
+  }, tab === "today" ? dKey === tKey ? niceDate(dKey) : dKey < tKey ? niceDate(dKey) + " — a past day" : niceDate(dKey) + " — a future day" : tab === "week" ? "The week in view" : tab === "month" ? "The month in view" : tab === "goals" ? "Twelve goals, one faithful month" : tab === "acts" ? "Time for what feeds you" : tab === "forty" ? "Forty days of devotion" : tab === "year" ? "The year's twelve intentions" : tab === "vision" ? "The life you are building" : tab === "affirm" ? "A word of support" : "Gentle reminders"), tab === "today" && /*#__PURE__*/React.createElement("div", {
     style: {
       display: "grid",
       gap: 16
@@ -3430,6 +3680,9 @@ function App() {
     acts: acts,
     setActs: setActs,
     mKey: mKey
+  }), tab === "forty" && /*#__PURE__*/React.createElement(Forty, {
+    forty: forty,
+    setForty: setForty
   }), tab === "year" && /*#__PURE__*/React.createElement(Year, {
     year: year,
     setYear: setYear
