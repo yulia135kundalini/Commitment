@@ -342,6 +342,9 @@ const C = {
 const QUOTES = [["The soul becomes dyed with the colour of its thoughts.", "Marcus Aurelius"], ["It is not that we have a short time to live, but that we waste much of it.", "Seneca"], ["Everyone thinks of changing the world, but no one thinks of changing himself.", "Leo Tolstoy"], ["Beauty will save the world.", "Fyodor Dostoevsky"], ["Whatever you can do, or dream you can, begin it. Boldness has genius, power and magic in it.", "Goethe"], ["Strive not to be a success, but rather to be of value.", "Albert Einstein"], ["The heart has its reasons which reason knows nothing of.", "Blaise Pascal"], ["Life can only be understood backwards; but it must be lived forwards.", "Søren Kierkegaard"], ["The only journey is the one within.", "Rainer Maria Rilke"], ["Nothing in life is to be feared, it is only to be understood.", "Marie Curie"], ["Time stays long enough for anyone who will use it.", "Leonardo da Vinci"], ["Our hearts are restless until they rest in Thee.", "St. Augustine"], ["What lies behind us and what lies before us are tiny matters compared to what lies within us.", "Ralph Waldo Emerson"], ["We are what we repeatedly do. Excellence, then, is not an act, but a habit.", "Aristotle (after Will Durant)"], ["He who has a why to live can bear almost any how.", "Friedrich Nietzsche"], ["Gratitude is not only the greatest of virtues, but the parent of all the others.", "Cicero"], ["The two most important days in your life are the day you are born and the day you find out why.", "attributed to Mark Twain"], ["Act as if what you do makes a difference. It does.", "William James"]];
 const NUTRITION = ["Vitamins", "Lemon water", "No caffeine", "No meat", "No sugar", "No dairy", "No alcohol", "2L+ water", "No fast food", "No gluten", "Veg & fruit", "Protein"];
 const SOUL = [{
+  id: "morning_exercise",
+  label: "Morning exercise (зарядка)"
+}, {
   id: "meditation",
   label: "Meditation / yoga"
 }, {
@@ -460,6 +463,7 @@ function ptx() {
 const emptyDay = () => ({
   intention: "",
   compliment: "",
+  visionPlan: "",
   priorities: {
     big: trip(),
     medium: trip(),
@@ -1282,7 +1286,7 @@ function Gratitude({
       gridTemplateColumns: "1fr 1fr 1fr",
       gap: 18
     }
-  }, block("thanksSelf", "Thankful to myself for…", C.brass), block("thanksOthers", "Thankful to others for…", C.sage), block("proud", "Proud of myself for…", C.rose)));
+  }, block("thanksSelf", "Thankful to myself for…", C.brass), block("thanksOthers", "Thankful for others for…", C.sage), block("proud", "Proud of myself for…", C.rose)));
 }
 
 /* ── exports ── */
@@ -1291,7 +1295,7 @@ function dayToMd(key, d) {
   const s = dayScore(d);
   const pr = g => d.priorities[g].filter(t => t.text.trim()).map(t => `  - [${t.done ? "x" : " "}] ${t.text}`).join("\n");
   const list = a => a.filter(Boolean).map(x => `  - ${x}`).join("\n");
-  return [`## ${key} (${dayName(key)})`, d.intention && `**Intention:** ${d.intention}`, d.compliment && `**Morning compliment:** ${d.compliment}`, s && `**Resonance:** ${s.score} · focus ${s.focus.toFixed(1)} · clear mind ${s.clarity.toFixed(1)} · energy ${s.energy.toFixed(1)} · impulses ${s.ticks}`, `**Priorities**\n- Big:\n${pr("big")}\n- Medium:\n${pr("medium")}\n- Quick:\n${pr("quick")}`, (d.joyPlan || []).some(t => t.text.trim()) && `**Planned joy**\n${d.joyPlan.filter(t => t.text.trim()).map(t => `  - [${t.done ? "x" : " "}] ${t.text}`).join("\n")}`, d.pulses.length && `**Pulses**\n${d.pulses.map(p => `  - ${p.time} ${p.activity} · F${p.focus} C${p.clarity} E${p.energy} · ${p.ticks} impulses · ${p.effect}`).join("\n")}`, `**Nourishment:** ${NUTRITION.filter(n => d.nutrition[n]).join(", ") || "—"}`, `**Anchors:** ${SOUL.filter(a => d.soul[a.id]).map(a => a.label).join(", ") || "—"}`, `**Sleep:** ${d.sleepHours} h, quality ${d.sleepQuality}/5 · **Screen:** ${d.screenTime || "—"} min`, d.visionStep && `**Vision step:** ${d.visionStep}`, (d.thanksSelf.some(Boolean) || d.thanksOthers.some(Boolean) || d.proud.some(Boolean)) && `**Thankful to myself:**\n${list(d.thanksSelf)}\n**Thankful to others:**\n${list(d.thanksOthers)}\n**Proud of:**\n${list(d.proud)}`, d.joy && `**Joy:** ${d.joy}`, d.inspired && `**Inspired most:** ${d.inspired}`, d.win && `**Win:** ${d.win}`, d.lesson && `**Lesson:** ${d.lesson}`, d.tomorrow && `**Differently tomorrow:** ${d.tomorrow}`, d.kindness && `**To myself, kindly:** ${d.kindness}`].filter(Boolean).join("\n\n") + "\n";
+  return [`## ${key} (${dayName(key)})`, d.intention && `**Intention:** ${d.intention}`, d.compliment && `**Morning compliment:** ${d.compliment}`, s && `**Resonance:** ${s.score} · focus ${s.focus.toFixed(1)} · clear mind ${s.clarity.toFixed(1)} · energy ${s.energy.toFixed(1)} · impulses ${s.ticks}`, `**Priorities**\n- Big:\n${pr("big")}\n- Medium:\n${pr("medium")}\n- Quick:\n${pr("quick")}`, (d.joyPlan || []).some(t => t.text.trim()) && `**Planned joy**\n${d.joyPlan.filter(t => t.text.trim()).map(t => `  - [${t.done ? "x" : " "}] ${t.text}`).join("\n")}`, d.pulses.length && `**Pulses**\n${d.pulses.map(p => `  - ${p.time} ${p.activity} · F${p.focus} C${p.clarity} E${p.energy} · ${p.ticks} impulses · ${p.effect}`).join("\n")}`, `**Nourishment:** ${NUTRITION.filter(n => d.nutrition[n]).join(", ") || "—"}`, `**Anchors:** ${SOUL.filter(a => d.soul[a.id]).map(a => a.label).join(", ") || "—"}`, `**Sleep:** ${d.sleepHours} h, quality ${d.sleepQuality}/5 · **Screen:** ${d.screenTime || "—"} min`, d.visionPlan && `**Vision plan:** ${d.visionPlan}`, d.visionStep && `**Vision step done:** ${d.visionStep}`, (d.thanksSelf.some(Boolean) || d.thanksOthers.some(Boolean) || d.proud.some(Boolean)) && `**Thankful to myself:**\n${list(d.thanksSelf)}\n**Thankful for others:**\n${list(d.thanksOthers)}\n**Proud of:**\n${list(d.proud)}`, d.joy && `**Joy:** ${d.joy}`, d.inspired && `**Inspired most:** ${d.inspired}`, d.win && `**Win:** ${d.win}`, d.lesson && `**Lesson:** ${d.lesson}`, d.tomorrow && `**Differently tomorrow:** ${d.tomorrow}`, d.kindness && `**To myself, kindly:** ${d.kindness}`].filter(Boolean).join("\n\n") + "\n";
 }
 async function exportDays(n, tKey, today) {
   const keys = lastNDays(n);
@@ -1342,7 +1346,14 @@ function Today({
     onChange: v => upd({
       priorities: v
     })
-  }), /*#__PURE__*/React.createElement(JoyPlan, {
+  }), /*#__PURE__*/React.createElement(Card, {
+    style: { borderColor: C.brassSoft, background: "#FBF7EC" }
+  }, React.createElement(Label, null, "Serving the vision — today's plan"), React.createElement("input", {
+    value: day.visionPlan || "",
+    onChange: e => upd({ visionPlan: e.target.value }),
+    placeholder: "the one thing I will do today to serve my life vision…",
+    style: inputStyle
+  })), React.createElement(JoyPlan, {
     day: day,
     upd: upd
   }), /*#__PURE__*/React.createElement(Pulses, {
