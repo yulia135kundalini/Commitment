@@ -460,14 +460,21 @@ function ptx() {
     done: false
   };
 }
+const manyPtx = n => Array.from({ length: n }, () => ptx());
+const padPtx = (a, n) => { const arr = (a || []).slice(); while (arr.length < n) arr.push(ptx()); return arr; };
+const normDay = d => ({ ...d, priorities: {
+  big: padPtx(d.priorities && d.priorities.big, 3),
+  medium: padPtx(d.priorities && d.priorities.medium, 5),
+  quick: padPtx(d.priorities && d.priorities.quick, 7)
+} });
 const emptyDay = () => ({
   intention: "",
   compliment: "",
   visionPlan: "",
   priorities: {
     big: trip(),
-    medium: trip(),
-    quick: trip()
+    medium: manyPtx(5),
+    quick: manyPtx(7)
   },
   joyPlan: trip(),
   pulses: [],
@@ -1341,7 +1348,7 @@ function Today({
     placeholder: "begin the day as your own ally…",
     style: inputStyle
   }))), /*#__PURE__*/React.createElement(PrioritySet, {
-    title: "Priorities of the day — 3 · 3 · 3",
+    title: "Priorities of the day — 3 · 5 · 7",
     value: day.priorities,
     onChange: v => upd({
       priorities: v
@@ -3444,10 +3451,10 @@ function App() {
     (async () => {
       setDayLoadedFor(null);
       const d = await sGet(`rhythm3:${dKey}`);
-      setDay(d ? {
+      setDay(d ? normDay({
         ...emptyDay(),
         ...d
-      } : emptyDay());
+      }) : emptyDay());
       setDayLoadedFor(dKey);
     })();
   }, [dKey]);
